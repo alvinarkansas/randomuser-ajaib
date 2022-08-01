@@ -1,6 +1,6 @@
 # Random User
 
-Simple app for displaying random users
+Simple app for displaying random users. View live site on https://randomuser-ajaib.netlify.app/
 
 ## 🖥️ Setup
 
