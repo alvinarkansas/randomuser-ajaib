@@ -17,31 +17,82 @@ function App() {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (name) => <p>{`${name.first} ${name.last}`}</p>,
+      render: (name) => <>{`${name.first} ${name.last}`}</>,
+      sorter: () => {},
     },
-    { title: "Email", dataIndex: "email", key: "email" },
-    { title: "Gender", dataIndex: "gender", key: "gender" },
+    { title: "Email", dataIndex: "email", key: "email", sorter: () => {} },
+    { title: "Gender", dataIndex: "gender", key: "gender", sorter: () => {} },
     {
       title: "Registered Date",
       dataIndex: ["registered", "date"],
       key: "date",
-      render: (date) => <p>{dayjs(date).format("DD-MM-YYYY HH:mm")}</p>,
+      render: (date) => <>{dayjs(date).format("DD-MM-YYYY HH:mm")}</>,
+      sorter: () => {},
     },
   ]);
+  const [params, setParams] = useState({
+    page: 1,
+    pageSize: 10,
+    results: 10,
+    keyword: null,
+    sortBy: null,
+    sortOrder: null,
+  });
+  const [loading, setLoading] = useState(false);
 
-  const loadUsers = async () => {
+  const loadUsers = async ({
+    page,
+    pageSize,
+    results,
+    keyword,
+    sortBy,
+    sortOrder,
+  }) => {
+    const apiParams = { page, pageSize, results };
+    if (keyword) apiParams.keyword = keyword;
+    if (sortBy) apiParams.sortBy = sortBy;
+    if (sortOrder) apiParams.sortOrder = sortOrder;
+
+    setLoading(true);
+
     const { data } = await axios.get("https://randomuser.me/api", {
-      params: {
-        page: 1,
-        pageSize: 10,
-        results: 35,
-      },
+      params: apiParams,
     });
     setUsers(data.results);
+    setParams({
+      ...params,
+      keyword,
+      page: data.info.page,
+    });
+    setLoading(false);
+  };
+
+  const onSearch = (value) => {
+    loadUsers({
+      ...params,
+      page: 1,
+      sortBy: null,
+      sortOrder: null,
+      keyword: value,
+    });
+  };
+
+  const onTableChange = (pagination, _, sorter) => {
+    loadUsers({
+      ...params,
+      page: pagination.current,
+      pageSize: pagination.pageSize,
+      sortBy: sorter.columnKey,
+      sortOrder: sorter.order,
+    });
   };
 
   useEffect(() => {
-    loadUsers();
+    loadUsers({
+      page: params.page,
+      pageSize: params.pageSize,
+      results: params.results,
+    });
   }, []);
 
   return (
@@ -49,10 +100,21 @@ function App() {
       <div style={{ display: "flex", gap: 16, marginBottom: 40 }}>
         <div>
           <p style={{ marginBottom: 0 }}>Search</p>
-          <Input.Search />
+          <Input.Search enterButton onSearch={onSearch} />
         </div>
       </div>
-      <Table columns={columns} dataSource={users} />
+      <Table
+        columns={columns}
+        dataSource={users}
+        loading={loading}
+        pagination={{
+          showSizeChanger: false,
+          current: params.page,
+          pageSize: params.pageSize,
+          total: 45,
+        }}
+        onChange={onTableChange}
+      />
     </div>
   );
 }
