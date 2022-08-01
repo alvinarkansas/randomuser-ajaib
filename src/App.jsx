@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Input } from "antd";
+import { Table, Input, Select, Row, Col, Button, Form } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
 import "antd/dist/antd.css";
 import "./App.css";
 
 function App() {
+  const [form] = Form.useForm();
   const [users, setUsers] = useState([]);
   const [columns] = useState([
     {
@@ -35,6 +36,7 @@ function App() {
     pageSize: 10,
     results: 10,
     keyword: null,
+    gender: null,
     sortBy: null,
     sortOrder: null,
   });
@@ -45,11 +47,13 @@ function App() {
     pageSize,
     results,
     keyword,
+    gender,
     sortBy,
     sortOrder,
   }) => {
     const apiParams = { page, pageSize, results };
     if (keyword) apiParams.keyword = keyword;
+    if (gender) apiParams.gender = gender;
     if (sortBy) apiParams.sortBy = sortBy;
     if (sortOrder) apiParams.sortOrder = sortOrder;
 
@@ -62,6 +66,7 @@ function App() {
     setParams({
       ...params,
       keyword,
+      gender,
       page: data.info.page,
     });
     setLoading(false);
@@ -87,6 +92,28 @@ function App() {
     });
   };
 
+  const onGenderChange = (value) => {
+    loadUsers({
+      ...params,
+      page: 1,
+      sortBy: null,
+      sortOrder: null,
+      gender: value,
+    });
+  };
+
+  const resetFilter = () => {
+    form.resetFields();
+    loadUsers({
+      ...params,
+      page: 1,
+      sortBy: null,
+      sortOrder: null,
+      keyword: null,
+      gender: null,
+    });
+  };
+
   useEffect(() => {
     loadUsers({
       page: params.page,
@@ -97,12 +124,42 @@ function App() {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 16, marginBottom: 40 }}>
-        <div>
-          <p style={{ marginBottom: 0 }}>Search</p>
-          <Input.Search enterButton onSearch={onSearch} />
-        </div>
-      </div>
+      <Form form={form} layout="vertical">
+        <Row gutter={16} align="bottom" style={{ marginBottom: 40 }}>
+          <Col span={6}>
+            <Form.Item label="Search" name="keyword">
+              <Input.Search
+                placeholder="Search here"
+                enterButton
+                onSearch={onSearch}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col span={6}>
+            <Form.Item label="Gender" name="gender">
+              <Select
+                placeholder="Select gender"
+                defaultValue=""
+                onChange={onGenderChange}
+                style={{ width: "100%" }}
+              >
+                <Select.Option value="">All</Select.Option>
+                <Select.Option value="male">Male</Select.Option>
+                <Select.Option value="female">Female</Select.Option>
+              </Select>
+            </Form.Item>
+          </Col>
+
+          <Col>
+            <Form.Item>
+              <Button htmlType="button" onClick={resetFilter}>
+                Reset Filter
+              </Button>
+            </Form.Item>
+          </Col>
+        </Row>
+      </Form>
       <Table
         columns={columns}
         dataSource={users}
