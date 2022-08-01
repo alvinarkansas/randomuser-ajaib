@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Table, Input, Select, Row, Col, Button, Form } from "antd";
+import { API_URL } from "./constants";
 import axios from "axios";
 import dayjs from "dayjs";
 import "antd/dist/antd.css";
@@ -59,7 +60,7 @@ function App() {
 
     setLoading(true);
 
-    const { data } = await axios.get("https://randomuser.me/api", {
+    const { data } = await axios.get(API_URL, {
       params: apiParams,
     });
     setUsers(data.results);
